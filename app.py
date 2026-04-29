@@ -3,6 +3,13 @@ import pandas as pd
 import base64
 from openai import OpenAI
 
+from supabase import create_client
+
+supabase = create_client(
+    st.secrets["SUPABASE_URL"],
+    st.secrets["SUPABASE_KEY"]
+)
+
 # --- 1. CONFIGURATION & SECRETS ---
 if "OPENAI_API_KEY" in st.secrets:
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -108,6 +115,19 @@ if st.button("Generate My Pokémon"):
                             
                             # Streamlit displays transparency perfectly!
                             st.image(decoded_image, caption=f"Modern {name} Generated!")
+
+                            pokemon_entry = {
+                                "name": name,
+                                "type": p_type,
+                                "tier": tier,
+                                "description": description,
+                                "stats": final_stats,
+                                "image_base64": image_data
+                            }
+
+                            if st.button("💾 Save to Fakédex"):
+                                save_pokemon_to_db(pokemon_entry)
+                                st.success("Saved!")
                             
                             # Add a download button for the PNG
                             st.download_button(
@@ -125,3 +145,28 @@ if st.button("Generate My Pokémon"):
         
         except Exception as e:
             st.error(f"Stat Calculation Error: {e}")
+
+# --- 8. Database ---
+def save_pokemon_to_db(pokemon_entry):
+    supabase.table("pokemon").insert(pokemon_entry).execute()
+
+def load_pokemon_from_db():
+    response = supabase.table("pokemon").select("*").order("created_at", desc=True).execute()
+    return response.data
+
+st.divider()
+st.header("📚 Fakédex")
+
+saved_pokemon = load_pokemon_from_db()
+
+for p in saved_pokemon:
+    st.subheader(p["name"])
+    st.write(f"Type: {p['type']} | Tier: {p['tier']}")
+    st.write(p["description"])
+    
+    st.table(pd.DataFrame(p["stats"].items(), columns=["Stat", "Value"]))
+    
+    if p["image_base64"]:
+        st.image(base64.b64decode(p["image_base64"]))
+
+
