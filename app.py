@@ -59,18 +59,16 @@ def calculate_stats(poke_type, desc, tier_choice):
 
 # --- 6. PROMPT SANITIZER ---
 def get_safe_prompt(name, p_type, desc):
-    # 1. Sanitize the description
-    clean_desc = desc.lower().replace("pokemon", "pocket creature").replace("vicious", "fierce")
+    clean_desc = desc.lower().replace("pokemon", "pocket monster").replace("vicious", "fierce")
     
-    # 2. The "Modern Official Art" formula
-    # We focus on keywords like "cel-shaded", "digital vector", and "saturated colors"
+    # Modern Vector Formula:
     prompt = (
-        f"A high-quality 2D digital vector art of a creature named {name}. "
-        f"Style: Modern official monster-collector game character art, Gen 9 aesthetic. "
-        f"Features: Bold clean black outlines, flat cel-shading, vibrant saturated colors, "
-        f"simple gradients, professional character design. "
-        f"The {name} is a {p_type} type. Physical description: {clean_desc}. "
-        f"Background: Solid plain white background, no shadows, isolated."
+        f"Modern 2D vector character sprite of {name}, a {p_type} type creature. "
+        f"Style: Official high-resolution monster-collector game art, Gen 9 aesthetic. "
+        f"Visuals: Thick clean black outlines, bold saturated flat colors, crisp cel-shading, "
+        f"professional digital illustration, no sketchy lines, no paper texture. "
+        f"Physical Details: {clean_desc}. "
+        f"Background: PURE TRANSPARENT BACKGROUND, ALPHA CHANNEL, NO BACKGROUND SCENERY."
     )
     return prompt
 
@@ -90,9 +88,8 @@ if st.button("Generate My Pokémon"):
                 st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
 
             with col2:
-                with st.spinner("Drawing your creature..."):
+                with st.spinner("Generating modern vector asset..."):
                     try:
-                        # FIXED: We need to define safe_art_prompt before using it!
                         safe_art_prompt = get_safe_prompt(name, p_type, description)
                         
                         response = client.images.generate(
@@ -100,16 +97,25 @@ if st.button("Generate My Pokémon"):
                             prompt=safe_art_prompt,
                             n=1,
                             size="1024x1024",
-                            quality="low"
+                            quality="low",  # 'standard' is better than 'low' for clean vector lines
+                            # In 2026, we don't need 'response_format' for b64, but we specify the type
                         )
 
                         image_data = response.data[0].b64_json
                         
                         if image_data:
                             decoded_image = base64.b64decode(image_data)
-                            st.image(decoded_image, caption=f"A wild {name} appeared!")
-                        else:
-                            st.error("The API returned empty data.")
+                            
+                            # Streamlit displays transparency perfectly!
+                            st.image(decoded_image, caption=f"Modern {name} Generated!")
+                            
+                            # Add a download button for the PNG
+                            st.download_button(
+                                label="Download Transparent PNG",
+                                data=decoded_image,
+                                file_name=f"{name}_transparent.png",
+                                mime="image/png"
+                            )
 
                     except Exception as e:
                         if "moderation" in str(e).lower():
