@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
-import openai
+from openai import OpenAI
 
 # --- 1. CONFIGURATION & SECRETS ---
 # Ensure you have set up 'OPENAI_API_KEY' in your Streamlit Secrets or environment variables
 if "OPENAI_API_KEY" in st.secrets:
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 else:
     st.warning("API Key not found. Image generation will be bypassed.")
 
