@@ -77,21 +77,26 @@ def get_safe_prompt(name, p_type, desc):
 
 # --- 7. EXECUTION ---
 if st.button("Generate My Pokémon"):
-    if name and description:
-        final_stats = calculate_stats(p_type, description, tier)
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            st.subheader(f"Name: {name}")
-            st.write(f"**Type:** {p_type} | **Tier:** {tier}")
-            st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
+    # First, make sure the user didn't leave boxes empty
+    if not name or not description:
+        st.error("Missing Info: Please enter a Name and a Description!")
+    else:
+        # 1. Safely calculate stats
+        try:
+            final_stats = calculate_stats(p_type, description, tier)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.subheader(f"Name: {name}")
+                st.write(f"**Type:** {p_type} | **Tier:** {tier}")
+                st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
 
-        with col2:
-            with st.spinner("Drawing your creature..."):
-                try:
-                    # Sanitize the user input before sending it to OpenAI
+            with col2:
+                with st.spinner("Drawing your creature..."):
+                    # 2. Get the safe prompt
                     safe_art_prompt = get_safe_prompt(name, p_type, description)
                     
+                    # 3. Generate Image with specific 'None' checks
                     response = client.images.generate(
                         model="gpt-image-1-mini",
                         prompt=safe_art_prompt,
@@ -99,11 +104,22 @@ if st.button("Generate My Pokémon"):
                         size="1024x1024",
                         quality="low"
                     )
-                    st.image(response.data[0].url, caption=f"A wild {name} appeared!")
-                except Exception as e:
-                    if "moderation" in str(e).lower():
-                        st.error("🚨 Prompt Rejected: The AI safety filter blocked your description. Try avoiding words like 'kill', 'blood', or specific copyrighted names.")
+
+                    # CHECK: Did the API actually return data?
+                    if response is not None and hasattr(response, 'data') and len(response.data) > 0:
+                        image_url = response.data[0].url
+                        if image_url:
+                            st.image(image_url, caption=f"A wild {name} appeared!")
+                        else:
+                            st.error("The API returned an empty URL. Check your OpenAI credits.")
                     else:
-                        st.error(f"Error: {e}")
-    else:
-        st.error("Please provide both a Name and a Description!")
+                        st.error("The API returned an empty response. Verify your API Key in Secrets.")
+
+        except Exception as e:
+            # This handles the 'NoneType' error specifically
+            if "NoneType" in str(e):
+                st.error("Internal Error: One of the inputs was empty. Please refresh and try again.")
+            elif "moderation" in str(e).lower():
+                st.error("🚨 Safety Filter: The AI didn't like your description. Try using different words!")
+            else:
+                st.error(f"Something went wrong: {e}")
