@@ -10,6 +10,38 @@ supabase = create_client(
     st.secrets["SUPABASE_KEY"]
 )
 
+if "generated_pokemon" not in st.session_state:
+    st.session_state.generated_pokemon = None
+
+def save_pokemon_to_db(pokemon_entry):
+    try:
+        response = supabase.table("pokemon").insert(pokemon_entry).execute()
+        
+        # Debug output
+        st.write("Insert response:", response)
+        
+        if hasattr(response, "error") and response.error:
+            st.error(f"Insert Error: {response.error}")
+        else:
+            st.success("Saved to database!")
+    
+    except Exception as e:
+        st.error(f"Insert failed: {e}")
+
+def load_pokemon_from_db():
+    try:
+        response = supabase.table("pokemon").select("*").order("created_at", desc=True).execute()
+        
+        if hasattr(response, "error") and response.error:
+            st.error(f"Database Error: {response.error}")
+            return []
+        
+        return response.data or []
+    
+    except Exception as e:
+        st.error(f"Failed to load Pokémon: {e}")
+        return []
+
 # --- 1. CONFIGURATION & SECRETS ---
 if "OPENAI_API_KEY" in st.secrets:
     client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -151,27 +183,14 @@ if st.button("Generate My Pokémon"):
 # --- 8. Database ---
 
 # Outside generation block
-if st.session_state.generated_pokemon:
+if st.session_state.generated_pokemon is not None:
+    st.subheader("Ready to Save")
+
     if st.button("💾 Save to Fakédex"):
         save_pokemon_to_db(st.session_state.generated_pokemon)
         st.success("Saved!")
 
-def save_pokemon_to_db(pokemon_entry):
-    supabase.table("pokemon").insert(pokemon_entry).execute()
 
-def load_pokemon_from_db():
-    try:
-        response = supabase.table("pokemon").select("*").order("created_at", desc=True).execute()
-        
-        if hasattr(response, "error") and response.error:
-            st.error(f"Database Error: {response.error}")
-            return []
-        
-        return response.data or []
-    
-    except Exception as e:
-        st.error(f"Failed to load Pokémon: {e}")
-        return []
 
 st.divider()
 st.header("📚 Fakédex")
