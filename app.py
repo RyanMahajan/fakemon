@@ -59,13 +59,18 @@ def calculate_stats(poke_type, desc, tier_choice):
 
 # --- 6. PROMPT SANITIZER ---
 def get_safe_prompt(name, p_type, desc):
+    # 1. Sanitize the description
     clean_desc = desc.lower().replace("pokemon", "pocket creature").replace("vicious", "fierce")
+    
+    # 2. The "Modern Official Art" formula
+    # We focus on keywords like "cel-shaded", "digital vector", and "saturated colors"
     prompt = (
-        f"A professional creature design in a classic Japanese monster-collector game style, "
-        f"reminiscent of official 90s watercolor character art. "
-        f"The creature is named {name}, it is a {p_type} type. "
-        f"Physical description: {clean_desc}. "
-        f"Isolated on a plain white background, high quality digital art."
+        f"A high-quality 2D digital vector art of a creature named {name}. "
+        f"Style: Modern official monster-collector game character art, Gen 9 aesthetic. "
+        f"Features: Bold clean black outlines, flat cel-shading, vibrant saturated colors, "
+        f"simple gradients, professional character design. "
+        f"The {name} is a {p_type} type. Physical description: {clean_desc}. "
+        f"Background: Solid plain white background, no shadows, isolated."
     )
     return prompt
 
