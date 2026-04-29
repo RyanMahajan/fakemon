@@ -125,9 +125,11 @@ if st.button("Generate My Pokémon"):
                                 "image_base64": image_data
                             }
 
-                            if st.button("💾 Save to Fakédex"):
-                                save_pokemon_to_db(pokemon_entry)
-                                st.success("Saved!")
+                            if "generated_pokemon" not in st.session_state:
+                                st.session_state.generated_pokemon = None
+
+                            # After generation
+                            st.session_state.generated_pokemon = pokemon_entry
                             
                             # Add a download button for the PNG
                             st.download_button(
@@ -147,6 +149,13 @@ if st.button("Generate My Pokémon"):
             st.error(f"Stat Calculation Error: {e}")
 
 # --- 8. Database ---
+
+# Outside generation block
+if st.session_state.generated_pokemon:
+    if st.button("💾 Save to Fakédex"):
+        save_pokemon_to_db(st.session_state.generated_pokemon)
+        st.success("Saved!")
+
 def save_pokemon_to_db(pokemon_entry):
     supabase.table("pokemon").insert(pokemon_entry).execute()
 
