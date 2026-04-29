@@ -17,9 +17,6 @@ def save_pokemon_to_db(pokemon_entry):
     try:
         response = supabase.table("pokemon").insert(pokemon_entry).execute()
         
-        # Debug output
-        st.write("Insert response:", response)
-        
         if hasattr(response, "error") and response.error:
             st.error(f"Insert Error: {response.error}")
         else:
