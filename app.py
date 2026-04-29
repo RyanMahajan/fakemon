@@ -96,24 +96,32 @@ if st.button("Generate My Pokémon"):
                     # 2. Get the safe prompt
                     safe_art_prompt = get_safe_prompt(name, p_type, description)
                     
-                    # 3. Generate Image with specific 'None' checks
-                    response = client.images.generate(
-                        model="gpt-image-1-mini",
-                        prompt=safe_art_prompt,
-                        n=1,
-                        size="1024x1024",
-                        quality="low"
-                    )
+            # 3. Generate Image with specific 'None' checks
+            try:
+                response = client.images.generate(
+                    model="gpt-image-1-mini",  # Correct 2026 ID
+                    prompt=safe_art_prompt,
+                    n=1,
+                    size="1024x1024",
+                    quality="low",           # Trigger for the $0.005 pricing
+                    response_format="url"    # Ensure it returns a link, not raw data
+                )
+                
+                # Securely retrieve the URL
+                if response and response.data:
+                    image_url = response.data[0].url
+                    st.image(image_url)
+                else:
+                    st.error("The model generated an image but failed to provide a link.")
 
-                    # CHECK: Did the API actually return data?
-                    if response is not None and hasattr(response, 'data') and len(response.data) > 0:
-                        image_url = response.data[0].url
-                        if image_url:
-                            st.image(image_url, caption=f"A wild {name} appeared!")
-                        else:
-                            st.error("The API returned an empty URL. Check your OpenAI credits.")
-                    else:
-                        st.error("The API returned an empty response. Verify your API Key in Secrets.")
+            except Exception as e:
+                # Helpful debugging for key issues
+                if "insufficient_quota" in str(e):
+                    st.error("Your API key works, but you have $0.00 credits. Add $5 to OpenAI Billing.")
+                elif "invalid_api_key" in str(e):
+                    st.error("The API key is incorrect. Check for extra spaces or a missing 'sk-' prefix.")
+                else:
+                    st.error(f"API Error: {e}")
 
         except Exception as e:
             # This handles the 'NoneType' error specifically
