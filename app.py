@@ -76,21 +76,18 @@ if st.button("Generate My Pokémon"):
             st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
 
         with col2:
-            st.subheader("Appearance")
-            # Image Generation Prompt
-            full_prompt = f"Official Ken Sugimori Pokemon style artwork of {name}, a {p_type} type pokemon. {description}. High quality, white background, digital art, clean lines."
-            
-            try:
-                with st.spinner("AI is sketching your Pokémon..."):
-                    response = openai.Image.create(
-                        prompt=full_prompt,
-                        n=1,
-                        size="512x512"
-                    )
-                    image_url = response['data'][0]['url']
-                    st.image(image_url, caption=f"A wild {name} appeared!")
-            except Exception as e:
-                st.error("Could not generate image. Check your API key or description.")
-                st.info("Debugging info: " + str(e))
+                # UPDATED: Using the gpt-image-1-mini model
+                with st.spinner("Generating budget-friendly art..."):
+                    try:
+                        response = client.images.generate(
+                            model="gpt-image-1-mini",  # The specific 'mini' model ID
+                            prompt=f"Official Ken Sugimori Pokemon style, {name}, {p_type} type, {description}, white background",
+                            n=1,
+                            size="1024x1024",
+                            quality="low"  # 'low' corresponds to the $0.005 price tier
+                        )
+                        st.image(response.data[0].url)
+                    except Exception as e:
+                        st.error(f"Error: {e}")
     else:
         st.error("Please provide both a Name and a Description!")
