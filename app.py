@@ -14,7 +14,7 @@ else:
 def load_data():
     # Replace with your actual filename. 
     # Assumes columns: 'Type 1', 'HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed'
-    return pd.read_csv("pokemon_data.csv")
+    return pd.read_csv("PKDATA.csv")
 
 df = load_data()
 
