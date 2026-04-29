@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import base64
 from openai import OpenAI
 
 # --- 1. CONFIGURATION & SECRETS ---
@@ -93,41 +94,30 @@ if st.button("Generate My Pokémon"):
 
             with col2:
                 with st.spinner("Drawing your creature..."):
-                    # 2. Get the safe prompt
-                    safe_art_prompt = get_safe_prompt(name, p_type, description)
-                    
-            # 3. Generate Image with specific 'None' checks
-            try:
-                response = client.images.generate(
-                    model="gpt-image-1-mini",  # Correct 2026 ID
-                    prompt=safe_art_prompt,
-                    n=1,
-                    size="1024x1024",
-                    quality="low",           # Trigger for the $0.005 pricing
-                    response_format="url"    # Ensure it returns a link, not raw data
-                )
-                
-                # Securely retrieve the URL
-                if response and response.data:
-                    image_url = response.data[0].url
-                    st.image(image_url)
-                else:
-                    st.error("The model generated an image but failed to provide a link.")
+                    try:
+                        # 1. Removed response_format!
+                        response = client.images.generate(
+                            model="gpt-image-1-mini",
+                            prompt=safe_art_prompt,
+                            n=1,
+                            size="1024x1024",
+                            quality="low"
+                        )
 
-            except Exception as e:
-                # Helpful debugging for key issues
-                if "insufficient_quota" in str(e):
-                    st.error("Your API key works, but you have $0.00 credits. Add $5 to OpenAI Billing.")
-                elif "invalid_api_key" in str(e):
-                    st.error("The API key is incorrect. Check for extra spaces or a missing 'sk-' prefix.")
-                else:
-                    st.error(f"API Error: {e}")
+                        # 2. Get the raw image data (base64)
+                        image_data = response.data[0].b64_json
+                        
+                        if image_data:
+                            # 3. Convert it into a format Streamlit understands
+                            decoded_image = base64.b64decode(image_data)
+                            st.image(decoded_image, caption=f"A wild {name} appeared!")
+                        else:
+                            st.error("The API returned empty data. Check your balance.")
 
-        except Exception as e:
-            # This handles the 'NoneType' error specifically
-            if "NoneType" in str(e):
-                st.error("Internal Error: One of the inputs was empty. Please refresh and try again.")
-            elif "moderation" in str(e).lower():
-                st.error("🚨 Safety Filter: The AI didn't like your description. Try using different words!")
-            else:
-                st.error(f"Something went wrong: {e}")
+                    except Exception as e:
+                        if "unknown_parameter" in str(e):
+                            st.error("Model settings error: The 'mini' model doesn't support the 'url' format. Use 'b64_json' (Updated in code).")
+                        elif "moderation" in str(e).lower():
+                            st.error("🚨 Safety Filter: Try changing your description words!")
+                        else:
+                            st.error(f"API Error: {e}")
