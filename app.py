@@ -209,13 +209,12 @@ saved_pokemon = load_pokemon_from_db()
 
 if saved_pokemon:
     for p in saved_pokemon:
+        if p["image_base64"]:
+            st.image(base64.b64decode(p["image_base64"]))
         st.subheader(p["name"])
         st.write(f"Type: {p['type']} | Tier: {p['tier']}")
         st.write(p["description"])
         
         st.table(pd.DataFrame(p["stats"].items(), columns=["Stat", "Value"]))
-        
-        if p["image_base64"]:
-            st.image(base64.b64decode(p["image_base64"]))
 
 
