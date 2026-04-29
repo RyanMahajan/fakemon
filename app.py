@@ -151,22 +151,33 @@ def save_pokemon_to_db(pokemon_entry):
     supabase.table("pokemon").insert(pokemon_entry).execute()
 
 def load_pokemon_from_db():
-    response = supabase.table("pokemon").select("*").order("created_at", desc=True).execute()
-    return response.data
+    try:
+        response = supabase.table("pokemon").select("*").order("created_at", desc=True).execute()
+        
+        if hasattr(response, "error") and response.error:
+            st.error(f"Database Error: {response.error}")
+            return []
+        
+        return response.data or []
+    
+    except Exception as e:
+        st.error(f"Failed to load Pokémon: {e}")
+        return []
 
 st.divider()
 st.header("📚 Fakédex")
 
 saved_pokemon = load_pokemon_from_db()
 
-for p in saved_pokemon:
-    st.subheader(p["name"])
-    st.write(f"Type: {p['type']} | Tier: {p['tier']}")
-    st.write(p["description"])
-    
-    st.table(pd.DataFrame(p["stats"].items(), columns=["Stat", "Value"]))
-    
-    if p["image_base64"]:
-        st.image(base64.b64decode(p["image_base64"]))
+if saved_pokemon:
+    for p in saved_pokemon:
+        st.subheader(p["name"])
+        st.write(f"Type: {p['type']} | Tier: {p['tier']}")
+        st.write(p["description"])
+        
+        st.table(pd.DataFrame(p["stats"].items(), columns=["Stat", "Value"]))
+        
+        if p["image_base64"]:
+            st.image(base64.b64decode(p["image_base64"]))
 
 
