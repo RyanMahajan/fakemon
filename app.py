@@ -72,8 +72,36 @@ def get_safe_prompt(name, p_type, desc):
     )
     return prompt
 
-# --- 7. EXECUTION ---
-if st.button("Generate My Pokémon"):
+# --- 7. EXECUTION & BUTTONS ---
+
+# Initialize session state for the image so the download button stays visible
+if "generated_image" not in st.session_state:
+    st.session_state.generated_image = None
+if "image_name" not in st.session_state:
+    st.session_state.image_name = ""
+
+# Create two columns for the buttons
+btn_col1, btn_col2 = st.columns([1, 1])
+
+with btn_col1:
+    generate_pressed = st.button("Generate My Pokémon", use_container_width=True)
+
+with btn_col2:
+    # Only show the download button if an image has been generated
+    if st.session_state.generated_image is not None:
+        st.download_button(
+            label="Download PNG",
+            data=st.session_state.generated_image,
+            file_name=f"{st.session_state.image_name}.png",
+            mime="image/png",
+            use_container_width=True
+        )
+    else:
+        # Placeholder so the layout stays even
+        st.button("Download (Locked)", disabled=True, use_container_width=True)
+
+# THE ACTUAL GENERATION LOGIC
+if generate_pressed:
     if not name or not description:
         st.error("Missing Info: Please enter a Name and a Description!")
     else:
@@ -81,14 +109,15 @@ if st.button("Generate My Pokémon"):
             # 1. Generate Stats
             final_stats = calculate_stats(p_type, description, tier)
             
-            col1, col2 = st.columns(2)
-            with col1:
+            # Display results in the main area
+            res_col1, res_col2 = st.columns(2)
+            with res_col1:
                 st.subheader(f"Name: {name}")
                 st.write(f"**Type:** {p_type} | **Tier:** {tier}")
                 st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
 
-            with col2:
-                with st.spinner("Generating modern vector asset..."):
+            with res_col2:
+                with st.spinner("Drawing your creature..."):
                     try:
                         safe_art_prompt = get_safe_prompt(name, p_type, description)
                         
@@ -97,8 +126,7 @@ if st.button("Generate My Pokémon"):
                             prompt=safe_art_prompt,
                             n=1,
                             size="1024x1024",
-                            quality="low",  # 'standard' is better than 'low' for clean vector lines
-                            # In 2026, we don't need 'response_format' for b64, but we specify the type
+                            quality="low"
                         )
 
                         image_data = response.data[0].b64_json
@@ -106,22 +134,20 @@ if st.button("Generate My Pokémon"):
                         if image_data:
                             decoded_image = base64.b64decode(image_data)
                             
-                            # Streamlit displays transparency perfectly!
-                            st.image(decoded_image, caption=f"Modern {name} Generated!")
+                            # SAVE TO SESSION STATE
+                            st.session_state.generated_image = decoded_image
+                            st.session_state.image_name = name
                             
-                            # Add a download button for the PNG
-                            st.download_button(
-                                label="Download Transparent PNG",
-                                data=decoded_image,
-                                file_name=f"{name}_transparent.png",
-                                mime="image/png"
-                            )
+                            # Show the image
+                            st.image(decoded_image, caption=f"A wild {name} appeared!")
+                            
+                            # Rerun to update the Download Button state
+                            st.rerun()
+                        else:
+                            st.error("The API returned empty data.")
 
                     except Exception as e:
-                        if "moderation" in str(e).lower():
-                            st.error("🚨 Safety Filter: Try changing your description words!")
-                        else:
-                            st.error(f"Image Generation Error: {e}")
+                        st.error(f"Image Error: {e}")
         
         except Exception as e:
-            st.error(f"Stat Calculation Error: {e}")
+            st.error(f"Calculation Error: {e}")
