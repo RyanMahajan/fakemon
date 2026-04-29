@@ -24,7 +24,6 @@ st.title("🧬 Fakémon Creator")
 with st.sidebar:
     st.header("Characteristics")
     name = st.text_input("Fakémon Name", placeholder="e.g., Voltkitty")
-    # Clean column names in case they have spaces/caps
     type_col = 'type_1' if 'type_1' in df.columns else 'Type 1'
     p_type = st.selectbox("Primary Type", sorted(df[type_col].unique()))
     description = st.text_area("Description", placeholder="e.g., A sleek, metallic feline that moves like lightning.")
@@ -43,7 +42,6 @@ def calculate_stats(poke_type, desc, tier_choice):
     multipliers = {"Baby": 0.6, "Basic": 1.0, "Final Evolution": 1.3, "Legendary": 1.6}
     mult = multipliers[tier_choice]
     
-    # Matching your CSV's lowercase column names
     stat_keys = ['hp', 'attack', 'defense', 'sp_attack', 'sp_defense', 'speed']
     stats = {k: int(type_averages.get(k, 50) * mult) for k in stat_keys}
     
@@ -59,14 +57,9 @@ def calculate_stats(poke_type, desc, tier_choice):
             stats[stat] = int(stats[stat] * boost)
     return stats
 
-# --- 6. PROMPT SANITIZER (The Fix for Moderation Error) ---
+# --- 6. PROMPT SANITIZER ---
 def get_safe_prompt(name, p_type, desc):
-    # Rule 1: Avoid the word "Pokemon" - use descriptive alternatives
-    # Rule 2: Swaps 'vicious' or 'aggressive' words that trigger blocks
     clean_desc = desc.lower().replace("pokemon", "pocket creature").replace("vicious", "fierce")
-    
-    # We use "Ken Sugimori style" but emphasize it's a "fictional creature design"
-    # to avoid copyright flags while keeping the aesthetic.
     prompt = (
         f"A professional creature design in a classic Japanese monster-collector game style, "
         f"reminiscent of official 90s watercolor character art. "
@@ -78,12 +71,11 @@ def get_safe_prompt(name, p_type, desc):
 
 # --- 7. EXECUTION ---
 if st.button("Generate My Pokémon"):
-    # First, make sure the user didn't leave boxes empty
     if not name or not description:
         st.error("Missing Info: Please enter a Name and a Description!")
     else:
-        # 1. Safely calculate stats
         try:
+            # 1. Generate Stats
             final_stats = calculate_stats(p_type, description, tier)
             
             col1, col2 = st.columns(2)
@@ -95,7 +87,9 @@ if st.button("Generate My Pokémon"):
             with col2:
                 with st.spinner("Drawing your creature..."):
                     try:
-                        # 1. Removed response_format!
+                        # FIXED: We need to define safe_art_prompt before using it!
+                        safe_art_prompt = get_safe_prompt(name, p_type, description)
+                        
                         response = client.images.generate(
                             model="gpt-image-1-mini",
                             prompt=safe_art_prompt,
@@ -104,20 +98,19 @@ if st.button("Generate My Pokémon"):
                             quality="low"
                         )
 
-                        # 2. Get the raw image data (base64)
                         image_data = response.data[0].b64_json
                         
                         if image_data:
-                            # 3. Convert it into a format Streamlit understands
                             decoded_image = base64.b64decode(image_data)
                             st.image(decoded_image, caption=f"A wild {name} appeared!")
                         else:
-                            st.error("The API returned empty data. Check your balance.")
+                            st.error("The API returned empty data.")
 
                     except Exception as e:
-                        if "unknown_parameter" in str(e):
-                            st.error("Model settings error: The 'mini' model doesn't support the 'url' format. Use 'b64_json' (Updated in code).")
-                        elif "moderation" in str(e).lower():
+                        if "moderation" in str(e).lower():
                             st.error("🚨 Safety Filter: Try changing your description words!")
                         else:
-                            st.error(f"API Error: {e}")
+                            st.error(f"Image Generation Error: {e}")
+        
+        except Exception as e:
+            st.error(f"Stat Calculation Error: {e}")
