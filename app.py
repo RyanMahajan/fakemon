@@ -74,11 +74,15 @@ def get_safe_prompt(name, p_type, desc):
 
 # --- 7. EXECUTION & BUTTONS ---
 
-# Initialize session state for the image so the download button stays visible
+# Initialize all memory pieces if they don't exist
 if "generated_image" not in st.session_state:
     st.session_state.generated_image = None
 if "image_name" not in st.session_state:
     st.session_state.image_name = ""
+if "final_stats" not in st.session_state:
+    st.session_state.final_stats = None
+if "final_type" not in st.session_state:
+    st.session_state.final_type = ""
 
 # Create two columns for the buttons
 btn_col1, btn_col2 = st.columns([1, 1])
@@ -87,67 +91,61 @@ with btn_col1:
     generate_pressed = st.button("Generate My Pokémon", use_container_width=True)
 
 with btn_col2:
-    # Only show the download button if an image has been generated
     if st.session_state.generated_image is not None:
         st.download_button(
-            label="Download PNG",
+            label=f"Download {st.session_state.image_name}",
             data=st.session_state.generated_image,
             file_name=f"{st.session_state.image_name}.png",
             mime="image/png",
             use_container_width=True
         )
     else:
-        # Placeholder so the layout stays even
         st.button("Download (Locked)", disabled=True, use_container_width=True)
 
-# THE ACTUAL GENERATION LOGIC
+# LOGIC: What happens when we hit Generate
 if generate_pressed:
     if not name or not description:
         st.error("Missing Info: Please enter a Name and a Description!")
     else:
         try:
-            # 1. Generate Stats
-            final_stats = calculate_stats(p_type, description, tier)
+            # 1. Calculate and Save Stats to memory
+            st.session_state.final_stats = calculate_stats(p_type, description, tier)
+            st.session_state.final_type = p_type
+            st.session_state.image_name = name
             
-            # Display results in the main area
-            res_col1, res_col2 = st.columns(2)
-            with res_col1:
-                st.subheader(f"Name: {name}")
-                st.write(f"**Type:** {p_type} | **Tier:** {tier}")
-                st.table(pd.DataFrame(final_stats.items(), columns=["Stat", "Value"]))
-
-            with res_col2:
-                with st.spinner("Drawing your creature..."):
-                    try:
-                        safe_art_prompt = get_safe_prompt(name, p_type, description)
-                        
-                        response = client.images.generate(
-                            model="gpt-image-1-mini",
-                            prompt=safe_art_prompt,
-                            n=1,
-                            size="1024x1024",
-                            quality="low"
-                        )
-
-                        image_data = response.data[0].b64_json
-                        
-                        if image_data:
-                            decoded_image = base64.b64decode(image_data)
-                            
-                            # SAVE TO SESSION STATE
-                            st.session_state.generated_image = decoded_image
-                            st.session_state.image_name = name
-                            
-                            # Show the image
-                            st.image(decoded_image, caption=f"A wild {name} appeared!")
-                            
-                            # Rerun to update the Download Button state
-                            st.rerun()
-                        else:
-                            st.error("The API returned empty data.")
-
-                    except Exception as e:
-                        st.error(f"Image Error: {e}")
-        
+            # 2. Generate and Save Image to memory
+            with st.spinner("Drawing your modern vector creature..."):
+                safe_art_prompt = get_safe_prompt(name, p_type, description)
+                response = client.images.generate(
+                    model="gpt-image-1-mini",
+                    prompt=safe_art_prompt,
+                    n=1,
+                    size="1024x1024",
+                    quality="standard"
+                )
+                
+                image_data = response.data[0].b64_json
+                if image_data:
+                    st.session_state.generated_image = base64.b64decode(image_data)
+                    # Force a refresh to show the newly saved data
+                    st.rerun()
+                else:
+                    st.error("API returned no data.")
         except Exception as e:
-            st.error(f"Calculation Error: {e}")
+            st.error(f"Error: {e}")
+
+# DISPLAY LOGIC: This runs every time the page loads
+# It checks if there is a Pokémon in memory and displays it
+if st.session_state.generated_image is not None:
+    st.divider() # Adds a nice visual line
+    res_col1, res_col2 = st.columns(2)
+    
+    with res_col1:
+        st.subheader(f"Name: {st.session_state.image_name}")
+        st.write(f"**Type:** {st.session_state.final_type}")
+        # Display the stats we saved in memory
+        stats_df = pd.DataFrame(st.session_state.final_stats.items(), columns=["Stat", "Value"])
+        st.table(stats_df)
+
+    with res_col2:
+        st.image(st.session_state.generated_image, caption="Modern Vector Design")
