@@ -98,17 +98,30 @@ def calculate_stats(poke_type, desc, tier_choice):
 
 # --- 6. PROMPT SANITIZER ---
 def get_safe_prompt(name, p_type, desc):
-    clean_desc = desc.lower().replace("pokemon", "pocket monster").replace("vicious", "fierce")
+    clean_desc = desc.lower()
     
-    # Modern Vector Formula:
+    replacements = {
+        "pokemon": "fantasy creature",
+        "monster": "creature",
+        "vicious": "fierce",
+        "kill": "defeat",
+        "attack": "strike",
+        "weapon": "ability",
+        "dark": "shadowy"
+    }
+
+    for bad, good in replacements.items():
+        clean_desc = clean_desc.replace(bad, good)
+
     prompt = (
         f"Modern 2D vector character sprite of {name}, a {p_type} type creature. "
-        f"Style: Official high-resolution monster-collector game art, Gen 9 aesthetic. "
-        f"Visuals: Thick clean black outlines, bold saturated flat colors, crisp cel-shading, "
-        f"professional digital illustration, no sketchy lines, no paper texture. "
+        f"Style: colorful fantasy game character art. "
+        f"Visuals: clean outlines, bright colors, cel-shaded, professional digital illustration. "
+        f"Friendly, non-violent design. "
         f"Physical Details: {clean_desc}. "
-        f"Background: PURE TRANSPARENT BACKGROUND, ALPHA CHANNEL, NO BACKGROUND SCENERY."
+        f"Background: transparent."
     )
+    
     return prompt
 
 # --- 7. EXECUTION ---
