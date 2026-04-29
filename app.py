@@ -27,7 +27,7 @@ st.markdown("Provide details to generate a new Pokémon based on dataset trends.
 with st.sidebar:
     st.header("Characteristics")
     name = st.text_input("Fakémon Name", placeholder="e.g., Voltkitty")
-    p_type = st.selectbox("Primary Type", sorted(df['Type 1'].unique()))
+    p_type = st.selectbox("Primary Type", sorted(df['type_1'].unique()))
     description = st.text_area("Description", placeholder="e.g., A sleek, metallic feline that moves like lightning.")
     
     tier = st.select_slider(
@@ -39,20 +39,20 @@ with st.sidebar:
 # --- 5. LOGIC: STAT CALCULATION ---
 def calculate_stats(poke_type, desc, tier_choice):
     # Get averages for the chosen type
-    type_averages = df[df['Type 1'] == poke_type].mean(numeric_only=True).to_dict()
+    type_averages = df[df['type_1'] == poke_type].mean(numeric_only=True).to_dict()
     
     # Tier multipliers (scaling the base data)
     multipliers = {"Baby": 0.6, "Basic": 1.0, "Final Evolution": 1.3, "Legendary": 1.6}
     mult = multipliers[tier_choice]
     
-    stats = {k: int(v * mult) for k, v in type_averages.items() if k in ['HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed']}
+    stats = {k: int(v * mult) for k, v in type_averages.items() if k in ['hp', 'attack', 'defense', 'sp_attack', 'sp_defense', 'speed']}
     
     # Description-based keyword modifiers
     keywords = {
-        "fast": ("Speed", 1.2), "lightning": ("Speed", 1.2),
-        "tank": ("Defense", 1.2), "bulky": ("Defense", 1.2), "sturdy": ("Defense", 1.2),
-        "strong": ("Attack", 1.2), "vicious": ("Attack", 1.2), "sharp": ("Attack", 1.2),
-        "smart": ("Sp. Atk", 1.2), "mystical": ("Sp. Atk", 1.2)
+        "fast": ("speed", 1.2), "lightning": ("speed", 1.2),
+        "tank": ("defense", 1.2), "bulky": ("defense", 1.2), "sturdy": ("defense", 1.2),
+        "strong": ("attack", 1.2), "vicious": ("attack", 1.2), "sharp": ("attack", 1.2),
+        "smart": ("sp_attack", 1.2), "mystical": ("sp_attack", 1.2)
     }
     
     for word, (stat, boost) in keywords.items():
