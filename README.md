@@ -2,11 +2,18 @@
 
 > This is a streamlit repository. Live Website at https://fakemon.streamlit.app
 
+<img width="1510" height="763" alt="Screenshot 2026-04-30 at 6 00 05 PM" src="https://github.com/user-attachments/assets/f6551440-0119-42a4-b49e-e17acf6fad29" />
+
 # How to Create Your Own Fakemon Website!
 
 ### Fork this Github Repository
 
-...
+> There are two options to fork the repo.
+
+1. Fork from Github
+2. Fork from Website
+> - In the upper right hand corner you will find the fork option. <img width="134" height="58" alt="Screenshot 2026-04-30 at 6 03 02 PM" src="https://github.com/user-attachments/assets/88b498a4-6fef-4f13-81a4-0ad85079151c" />
+
 
 ### How to Set Up Streamlit
 
