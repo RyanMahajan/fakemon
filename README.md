@@ -2,9 +2,15 @@
 
 > This is a streamlit repository. Live Website at https://fakemon.streamlit.app
 
+# How to Create Your Own Fakemon Website!
+
+### Fork this Github Repository
+
+...
+
 ### How to Set Up Streamlit
 
-1. Create a Streamlit Account
+1. Create a Streamlit Account at https://https://share.streamlit.io/
 2. Create a New Project and Link Repository
 3. Add API Keys (For Database and OpenAI)
 
