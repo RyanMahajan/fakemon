@@ -59,10 +59,19 @@
 7. Create General Permission Policies for `SELECT` and `INSERT` using Supabase Default Templates
 > <img width="994" height="336" alt="Screenshot 2026-04-30 at 7 57 40 PM" src="https://github.com/user-attachments/assets/df2f3930-0d92-4cad-aa78-631477b628dd" />
 > <img width="1155" height="390" alt="Screenshot 2026-04-30 at 7 58 07 PM" src="https://github.com/user-attachments/assets/e3ad485a-9337-4752-a07d-1cb576938658" />
+8. Go to Project Settings to find API keys
+> <img width="199" height="564" alt="Screenshot 2026-04-30 at 8 01 55 PM" src="https://github.com/user-attachments/assets/920e88c1-b42d-41bf-9506-f721f682733a" />
+9. Navigate to API key Settings
+> <img width="247" height="236" alt="Screenshot 2026-04-30 at 8 02 40 PM" src="https://github.com/user-attachments/assets/80384326-74ea-40af-adb0-e3a037039ddf" />
+10. Save `anon public key`
+11. Save Database URL from General Settings
+> <img width="288" height="367" alt="Screenshot 2026-04-30 at 8 04 02 PM" src="https://github.com/user-attachments/assets/62b2ed78-fd41-4171-bc7c-bcd2fbc602f1" />
 
+### Pulling it all Togeather
 
-### Creating the Streamlit App
+1. Return to your Streamlit app and add the keys from OpenAI and the Database. These include `OPENAI_API_KEY`, `SUPABASE_URL`, and `SUPABASE_KEY`
+> <img width="733" height="386" alt="Screenshot 2026-04-30 at 7 33 26 PM" src="https://github.com/user-attachments/assets/d547b58f-e9af-4047-a1f5-2b4d8cff9c7e" />
+2. The App should now Run!
 
-1. Create a `requirements.txt` file for python libraries
-2. Create a `app.py` file for the app
-3. TODO (all of the code explanation)
+### Going over `app.py` file
+
