@@ -73,7 +73,7 @@
 > <img width="733" height="386" alt="Screenshot 2026-04-30 at 7 33 26 PM" src="https://github.com/user-attachments/assets/d547b58f-e9af-4047-a1f5-2b4d8cff9c7e" />
 2. The App should now Run!
 
-### Going over `app.py` file
+# Going over `app.py` file
 
 1. The streamlit library covers css and html elements so we can just call different elements from the st library.
 2. Lets go over individual methods.
