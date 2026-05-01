@@ -75,7 +75,7 @@
 
 # Going over `app.py` file
 
-1. The streamlit library covers css and html elements so we can just call different elements from the st library.
+1. The streamlit library covers css and html elements so we can just call different elements from the `st` library.
 2. Lets go over individual methods.
 > 1. `save_pokemon_to_db(pokemon_entry)`
 >   - this sends an `INSERT` request to the supabase db to add the pokemon_entry data to the database
@@ -86,3 +86,30 @@
 >   - admittedly this function is very simple and linear. there is definettly room to improve the functionality of how stats are generated.
 > 4. `get_safe_prompt(name, p_type, desc)`
 >   - this method creates and prompt engineers the text that will be sent to the OpenAI image generation model.
+3. Lets go over how the OpenAI API is used.
+> Here is the code for linking the API
+```
+# --- 1. CONFIGURATION & SECRETS ---
+if "OPENAI_API_KEY" in st.secrets:
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+else:
+    st.warning("API Key not found. Image generation will be bypassed.")
+```
+> The API is then called with these parameters
+```
+response = client.images.generate(
+  model="gpt-image-1-mini",
+  prompt=safe_art_prompt,
+  n=1,
+  size="1024x1024",
+  quality="low",  # 'standard' is better than 'low' for clean vector lines
+  # In 2026, we don't need 'response_format' for b64, but we specify the type
+)
+```
+> Finally here is how the image is accessed and decoded
+```
+image_data = response.data[0].b64_json
+                        
+if image_data:
+  decoded_image = base64.b64decode(image_data)
+```
