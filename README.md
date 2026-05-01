@@ -75,3 +75,14 @@
 
 ### Going over `app.py` file
 
+1. The streamlit library covers css and html elements so we can just call different elements from the st library.
+2. Lets go over individual methods.
+> 1. `save_pokemon_to_db(pokemon_entry)`
+>   - this sends an `INSERT` request to the supabase db to add the pokemon_entry data to the database
+> 2. `load_pokemon_from_db()`
+>   - this requests the pokemon data from the supabase db using `SELECT`
+> 3. `calculate_stats(poke_type, desc, tier_choice)`
+>   - this calculate the stats of the new pokemon based off of the type, description, and tier of the pokemon
+>   - admittedly this function is very simple and linear. there is definettly room to improve the functionality of how stats are generated.
+> 4. `get_safe_prompt(name, p_type, desc)`
+>   - this method creates and prompt engineers the text that will be sent to the OpenAI image generation model.
